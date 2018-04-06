@@ -4,8 +4,8 @@
  * Represented by a triangle.
  */
 
-var isOneTouch = true;
-var control = 1;
+var isOneTouch = false;
+var control = 2;
 var controlTypes = ["arrows", "drag", "target"];
 
 var ee = null;
@@ -57,7 +57,7 @@ function createEE() {
         createArrows();
     }
     else {
-        ws.setAttributeNS(null, "onmousedown", "startTargetDrag(evt)");
+        ws.setAttributeNS(null, "onmousemove", "drag(evt)");
     }
 
     ws.appendChild(ee);
@@ -74,8 +74,13 @@ function startArrowDrag() {
     //TODO
 }
 
-function startTargetDrag() {
-
+function startTargetDrag(evt) {
+    console.log("We are moving, and the event is: " + evt);
+    ee.setAttribute("transform", "translate(" + evt.offsetX + " " + evt.offsetY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
+    if (isOneTouch)
+        ee.setAttributeNS(null, "onclick", "pivot(evt)");
+    else
+        ee.setAttributeNS(null, "onmousedown", "pivot(evt)");
 }
 
 function createTarget() {
@@ -118,21 +123,27 @@ function resetPose() {
     var y = 0;
     ee.setAttribute("points", (x-triWidth/2)+","+(y-triHeightDiff)+","+(x+triWidth/2)+","+(y-triHeightDiff)+","+(x)+","+(y+innerR));
     ee.setAttribute("transform", "translate(" + pos[0] + " " + pos[1] + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
-    ring.setAttribute("cx", pos[0]);
-    ring.setAttribute("cy", pos[1]);
+    if(ring) {
+        ring.setAttribute("cx", pos[0]);
+        ring.setAttribute("cy", pos[1]);
+    }
 
-    // Check if target is reached
-    var threshold = 3;
-    var xErr = Math.abs(pos[0]-targetPos[0]);
-    var yErr = Math.abs(pos[1]-targetPos[1]);
-    var rotErr = Math.abs(rot-targetRot);
-
-    if (xErr < threshold &&
-        yErr < threshold &&
-        rotErr < threshold)
+    if(goalReached(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
         target.style.stroke = "#393";
-    else
+    }
+    else {
         target.style.stroke = "#933";
+    }
+}
+
+function pivot(evt) {
+
+    var ws = document.getElementById("workspace");
+    ws.setAttributeNS(null, "onmousemove", "point(evt)");
+}
+
+function point(evt) {
+    console.log(evt);
 }
 
 function startDrag(evt) {
@@ -185,6 +196,17 @@ function drag(evt) {
     pos = [startPos[0]+a[0], startPos[1]+a[1]];
     console.log("moved");
     resetPose();
+}
+
+// Check if target is reached
+function goalReached(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot){
+    var threshold = 3;
+    var xErr = Math.abs(currPoseX-goalPoseX);
+    var yErr = Math.abs(currPoseY-goalPoseY);
+    var rotErr = Math.abs(currRot-goalRot);
+
+    return (xErr < threshold && yErr < threshold && rotErr < threshold);
+
 }
 
 function rotate(evt) {
