@@ -23,6 +23,31 @@ var rot = null;
 var targetPos = null;
 var targetRot = null;
 
+// The global variables used by the arrows
+var scale = 0.1;
+var arrowRight;
+var arrowLeft;
+var arrowUp;
+var arrowDown;
+var arrows;
+
+var arrowRightXOffset;
+var arrowRightYOffset;
+var arrowLeftXOffset;
+var arrowLeftYOffset;
+var arrowUpXOffset;
+var arrowUpYOffset;
+var arrowDownXOffset;
+var arrowDownYOffset;
+
+// Constant variables for the arrows
+const HORIZONTAL = 0;
+const VERTICAL = 1;
+
+// The global variables used by the target control type
+var targetFixedX = null;
+var targetFixedY = null;
+
 // Radius and width of the control ring
 var innerR = 30;
 var ringWidth = 20;
@@ -54,10 +79,27 @@ function createEE() {
     }
     else if (controlTypes[control] == "arrows") {
         ee.setAttributeNS(null, "onmousedown", "startArrowDrag(evt)");
+        createRing();
         createArrows();
+        if (isOneTouch) {
+
+                arrowRight.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
+                arrowLeft.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
+                arrowUp.setAttribute("onclick", "startDrag(evt, VERTICAL)");
+                arrowDown.setAttribute("onclick", "startDrag(evt, VERTICAL)");
+
+        }
+        else {
+
+                arrowRight.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
+                arrowLeft.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
+                arrowUp.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
+                arrowDown.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
+
+        }
     }
     else {
-        ws.setAttributeNS(null, "onmousemove", "drag(evt)");
+        ws.setAttribute("onmousemove", "startTargetDrag(evt)");
     }
 
     ws.appendChild(ee);
@@ -66,9 +108,6 @@ function createEE() {
     resetPose();
 }
 
-function createArrows() {
-    //TODO
-}
 
 function startArrowDrag() {
     //TODO
@@ -77,6 +116,8 @@ function startArrowDrag() {
 function startTargetDrag(evt) {
     console.log("We are moving, and the event is: " + evt);
     ee.setAttribute("transform", "translate(" + evt.offsetX + " " + evt.offsetY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
+    checkGoal(evt.offsetX, evt.offsetY, targetPos[0], targetPos[1], rot, targetRot);
+    //TODO Check to see if you made it
     if (isOneTouch)
         ee.setAttributeNS(null, "onclick", "pivot(evt)");
     else
@@ -89,7 +130,7 @@ function createTarget() {
     targetPos = [innerR + Math.random()*(rect.width - 2*innerR), innerR + Math.random()*(rect.height-2*innerR)];
     targetRot = Math.random()*360 - 180;
     target = document.createElementNS('http://www.w3.org/2000/svg','polygon');
-    target.setAttribute("id", "ee");
+    target.setAttribute("id", "target");
     target.setAttribute("stroke-width", 4);
     target.style.fill = "none";
     target.style.stroke = "#933";
@@ -118,6 +159,57 @@ function createRing() {
     ws.appendChild(ring);
 }
 
+function createArrows() {
+    var ws = document.getElementById("workspace");
+    var rect = ws.getBoundingClientRect();
+
+    arrowRight = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowLeft = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowUp = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowDown = document.createElementNS('http://www.w3.org/2000/svg','path');
+
+    arrowRight.setAttribute("d", "M313.941 216H12c-6.627 0-12 5.373-12 12v56c0 6.627 5.373 12 12 12h301.941v46.059c0 21.382 25.851 32.09 40.971 16.971l86.059-86.059c9.373-9.373 9.373-24.569 0-33.941l-86.059-86.059c-15.119-15.119-40.971-4.411-40.971 16.971V216z");
+    arrowLeft.setAttribute("d", "M134.059 296H436c6.627 0 12-5.373 12-12v-56c0-6.627-5.373-12-12-12H134.059v-46.059c0-21.382-25.851-32.09-40.971-16.971L7.029 239.029c-9.373 9.373-9.373 24.569 0 33.941l86.059 86.059c15.119 15.119 40.971 4.411 40.971-16.971V296z");
+    arrowUp.setAttribute("d", "M88 166.059V468c0 6.627 5.373 12 12 12h56c6.627 0 12-5.373 12-12V166.059h46.059c21.382 0 32.09-25.851 16.971-40.971l-86.059-86.059c-9.373-9.373-24.569-9.373-33.941 0l-86.059 86.059c-15.119 15.119-4.411 40.971 16.971 40.971H88z");
+    arrowDown.setAttribute("d", "M168 345.941V44c0-6.627-5.373-12-12-12h-56c-6.627 0-12 5.373-12 12v301.941H41.941c-21.382 0-32.09 25.851-16.971 40.971l86.059 86.059c9.373 9.373 24.569 9.373 33.941 0l86.059-86.059c15.119-15.119 4.411-40.971-16.971-40.971H168z");
+
+    var horizontalArrowWidth = arrowLeft.getBBox().width * scale;
+    var verticalArrowWidth = arrowDown.getBBox().width * scale;
+    var horizontalArrowHeight = arrowLeft.getBBox().height * scale;
+    var verticalArrowHeight = arrowDown.getBBox().height * scale;
+    var horizontalInitialY = arrowLeft.getBBox().y * scale;
+    var verticalInitialY = arrowDown.getBBox().y * scale;
+
+    arrowRightXOffset = innerR + ringWidth;
+    arrowRightYOffset = -horizontalInitialY - horizontalArrowHeight/2;
+    arrowLeftXOffset = -(innerR + ringWidth + horizontalArrowWidth);
+    arrowLeftYOffset = -horizontalInitialY - horizontalArrowHeight/2;
+    arrowUpXOffset = -(verticalArrowWidth /2);
+    arrowUpYOffset = -verticalInitialY - (innerR + ringWidth) - verticalArrowHeight;
+    arrowDownXOffset = -(verticalArrowWidth /2);
+    arrowDownYOffset = -verticalInitialY + (innerR + ringWidth);
+
+
+    arrowRight.setAttribute("transform", "translate(" + (arrowRightXOffset + Math.round(rect.width/2))
+        + " " + (arrowRightYOffset + Math.round(rect.height/2))+ ") scale(" + scale + ")");
+    arrowLeft.setAttribute("transform", "translate(" + (arrowLeftXOffset + Math.round(rect.width/2))
+        + " " + (arrowLeftYOffset + Math.round(rect.height/2)) + ") scale(" + scale + ")");
+    arrowUp.setAttribute("transform", "translate(" + (arrowUpXOffset + Math.round(rect.width/2))
+        + " " + (arrowUpYOffset + Math.round(rect.height/2)) + ") scale(" + scale + ")");
+    arrowDown.setAttribute("transform", "translate(" + (arrowDownXOffset + Math.round(rect.width/2))
+        + " " + (arrowDownYOffset + Math.round(rect.height/2))+ ") scale(" + scale + ")");
+
+
+    ws.appendChild(arrowRight);
+    ws.appendChild(arrowLeft);
+    ws.appendChild(arrowUp);
+    ws.appendChild(arrowDown);
+
+    arrows = [arrowRight, arrowLeft, arrowUp, arrowDown];
+
+
+}
+
 function resetPose() {
     var x = 0;
     var y = 0;
@@ -127,26 +219,58 @@ function resetPose() {
         ring.setAttribute("cx", pos[0]);
         ring.setAttribute("cy", pos[1]);
     }
+    if(arrows){
+        arrowRight.setAttribute("transform", "translate(" + (pos[0] + arrowRightXOffset) + " " + (pos[1] + arrowRightYOffset) + ") scale(" + scale + ")")
+        arrowLeft.setAttribute("transform", "translate(" + (pos[0] + arrowLeftXOffset) + " " + (pos[1] + arrowLeftYOffset) + ") scale(" + scale + ")")
+        arrowUp.setAttribute("transform", "translate(" + (pos[0] + arrowUpXOffset) + " " + (pos[1] + arrowUpYOffset) + ") scale(" + scale + ")")
+        arrowDown.setAttribute("transform", "translate(" + (pos[0] + arrowDownXOffset) + " " + (pos[1] + arrowDownYOffset) + ") scale(" + scale + ")")
+    }
 
-    if(goalReached(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
-        target.style.stroke = "#393";
-    }
-    else {
-        target.style.stroke = "#933";
-    }
+    checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot);
+
 }
 
 function pivot(evt) {
-
     var ws = document.getElementById("workspace");
-    ws.setAttributeNS(null, "onmousemove", "point(evt)");
+    targetFixedX = evt.offsetX;
+    targetFixedY = evt.offsetY;
+    ws.setAttribute("onmousemove", "point(evt)");
+    if(!isOneTouch){
+        ws.setAttribute("onmouseup", "stopPoint(evt)");
+    }
 }
 
 function point(evt) {
-    console.log(evt);
+    var ws = document.getElementById("workspace");
+    var deltaX = evt.offsetX - targetFixedX;
+    var deltaY = evt.offsetY - targetFixedY;
+    var angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+    angle -= 90;
+    rot = angle;
+    ee.setAttribute("transform", "translate(" + targetFixedX + " " + targetFixedY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
+    checkGoal(targetFixedX, targetFixedY, targetPos[0], targetPos[1], rot, targetRot);
+    if(isOneTouch){
+        ws.setAttribute("onclick", "stopPoint(evt)");
+    }
+    else{
+        ws.setAttribute("onmouseup", "stopPoint(evt)");
+    }
 }
 
-function startDrag(evt) {
+function stopPoint(evt){
+    var ws = document.getElementById("workspace");
+    if(isOneTouch){
+        ws.removeAttribute("onclick");
+        ee.removeAttribute("onclick");
+    }
+    else{
+        ws.removeAttribute("onmouseup");
+        ee.removeAttribute("onmousedown");
+    }
+    ws.setAttribute("onmousemove", "startTargetDrag(evt)");
+}
+
+function startDrag(evt, direction) {
     console.log("drag starts");
     isTranslating = true;
     var ws = document.getElementById("workspace");
@@ -156,14 +280,29 @@ function startDrag(evt) {
     refPos = [mouseX, mouseY];
     startPos = pos;
 
-    ws.setAttributeNS(null, "onmousemove", "drag(evt)");
 
-    if (isOneTouch)
-        ee.setAttributeNS(null, "onclick", "stopDrag(evt)");
-    else
-        ws.setAttributeNS(null, "onmouseup", "stopDrag(evt)");
+    if (direction == undefined ) {
+        ws.setAttributeNS(null, "onmousemove", "drag(evt)");
 
-    ee.style.fill = "#9EE";
+        if (isOneTouch)
+            ee.setAttributeNS(null, "onclick", "stopDrag(evt)");
+        else
+            ws.setAttributeNS(null, "onmouseup", "stopDrag(evt)");
+        ee.style.fill = "#9EE";
+    }else {
+        ws.setAttributeNS(null, "onmousemove", "drag(evt, " + direction + ")");
+
+        if (isOneTouch) {
+            arrows.forEach(function(arrow) {
+               arrow.setAttributeNS(null, "onclick", "stopDrag(evt, " + direction + ")");
+            });
+        }
+        else
+            ws.setAttributeNS(null, "onmouseup", "stopDrag(evt, " + direction + ")");
+
+        ee.style.fill = "#9EE";
+    }
+
 }
 
 function startRotate(evt) {
@@ -186,26 +325,54 @@ function startRotate(evt) {
     ring.style.stroke = "#99E";
 }
 
-function drag(evt) {
+function drag(evt, direction) {
     var ws = document.getElementById("workspace");
     var rect = ws.getBoundingClientRect();
     var mouseX = evt.clientX - rect.left;
     var mouseY = evt.clientY - rect.top;
     var newPoint = [mouseX, mouseY];
     var a = diff(newPoint, refPos);
-    pos = [startPos[0]+a[0], startPos[1]+a[1]];
+
+    if(direction == undefined) {
+        pos = [startPos[0] + a[0], startPos[1] + a[1]];
+    }
+    else if(direction == HORIZONTAL){
+        pos = [startPos[0] + a[0], startPos[1]];
+    }else if(direction == VERTICAL){
+        pos = [startPos[0], startPos[1] + a[1]];
+    }else {
+        console.error("Bad direction");
+    }
+
+    console.log("moved");
+    resetPose();
+}
+
+function horizontalDrag(evt) {
+    var ws = document.getElementById("workspace");
+    var rect = ws.getBoundingClientRect();
+    var mouseX = evt.clientX - rect.left;
+    var mouseY = evt.clientY - rect.top;
+    var newPoint = [mouseX, mouseY];
+    var a = diff(newPoint, refPos);
+    pos = [startPos[0]+a[0], startPos[1]];
     console.log("moved");
     resetPose();
 }
 
 // Check if target is reached
-function goalReached(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot){
+function checkGoal(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot){
     var threshold = 3;
     var xErr = Math.abs(currPoseX-goalPoseX);
     var yErr = Math.abs(currPoseY-goalPoseY);
     var rotErr = Math.abs(currRot-goalRot);
 
-    return (xErr < threshold && yErr < threshold && rotErr < threshold);
+    if(xErr < threshold && yErr < threshold && rotErr < threshold){
+        success();
+    }
+    else{
+        target.style.stroke = "#933";
+    }
 
 }
 
@@ -256,16 +423,28 @@ function dist(p1, p2) {
     return Math.sqrt(Math.pow((p1[0]-p2[0]),2) + Math.pow((p1[1]-p2[1]),2));
 }
 
-function stopDrag(evt) {
+function stopDrag(evt, direction) {
     if (isTranslating) {
         var ws = document.getElementById("workspace");
         ws.removeAttributeNS(null, "onmousemove");
 
-        if (isOneTouch) {
-            ee.setAttributeNS(null, "onclick", "startDrag(evt)");
-        }
-        else {
-            ws.removeAttributeNS(null, "onmouseup");
+        if (direction == undefined) {
+            if (isOneTouch) {
+                ee.setAttributeNS(null, "onclick", "startDrag(evt)");
+            }
+            else {
+                ws.removeAttributeNS(null, "onmouseup");
+            }
+        } else {
+            if (isOneTouch) {
+                arrowRight.setAttributeNS(null, "onclick", "startDrag(evt, HORIZONTAL)");
+                arrowLeft.setAttributeNS(null, "onclick", "startDrag(evt, HORIZONTAL)");
+                arrowUp.setAttributeNS(null, "onclick", "startDrag(evt, VERTICAL)");
+                arrowDown.setAttributeNS(null, "onclick", "startDrag(evt, VERTICAL)");
+            }
+            else {
+                ws.removeAttributeNS(null, "onmouseup");
+            }
         }
 
         ee.style.fill = "#ACC";
@@ -286,4 +465,9 @@ function stopRotate(evt) {
         isRotating = false;
         ring.style.stroke = "#AAC";
     }
+}
+
+function success() {
+    target.style.stroke = "#393";
+    console.log("SUCCESS!");
 }
