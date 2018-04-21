@@ -4,13 +4,16 @@
  * Represented by a triangle.
  */
 
-var isOneTouch = false;
-var control = 2;
-var controlTypes = ["arrows", "drag", "target"];
+var isOneTouch = true;
+var control = 0;
+var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
+
 
 var ee = null;
 var ring = null;
 var target = null;
+
+var score = 0;
 
 var isTranslating = false;
 var isRotating = false;
@@ -70,14 +73,14 @@ function createEE() {
 
     ee.setAttribute("class", "draggable");
 
-    if (controlTypes[control] == "drag") {
+    if (controlTypes[control] === "drag") {
         if (isOneTouch)
             ee.setAttributeNS(null, "onclick", "startDrag(evt)");
         else
             ee.setAttributeNS(null, "onmousedown", "startDrag(evt)");
         createRing();
     }
-    else if (controlTypes[control] == "arrows") {
+    else if (controlTypes[control] === "arrows") {
         ee.setAttributeNS(null, "onmousedown", "startArrowDrag(evt)");
         createRing();
         createArrows();
@@ -98,8 +101,20 @@ function createEE() {
 
         }
     }
-    else {
+    else if (controlTypes[control] === "target"){
         ws.setAttribute("onmousemove", "startTargetDrag(evt)");
+    }
+    else if (controlTypes[control] === "cardinal_speech"){
+
+    }
+    else if (controlTypes[control] === "trajectory_speech"){
+
+    }
+    else if (controlTypes[control] === "grid_speech"){
+
+    }
+    else {
+        console.error("Please select a valid control");
     }
 
     ws.appendChild(ee);
@@ -247,6 +262,12 @@ function point(evt) {
     var angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
     angle -= 90;
     rot = angle;
+
+    if (rot > 180)
+        rot -= 360;
+    if (rot < -180)
+        rot += 360;
+
     ee.setAttribute("transform", "translate(" + targetFixedX + " " + targetFixedY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
     checkGoal(targetFixedX, targetFixedY, targetPos[0], targetPos[1], rot, targetRot);
     if(isOneTouch){
@@ -367,6 +388,8 @@ function checkGoal(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot)
     var yErr = Math.abs(currPoseY-goalPoseY);
     var rotErr = Math.abs(currRot-goalRot);
 
+    console.log("xErr: " + xErr + "yErr: " + yErr+ "rotErr: " + rotErr);
+
     if(xErr < threshold && yErr < threshold && rotErr < threshold){
         success();
     }
@@ -467,7 +490,13 @@ function stopRotate(evt) {
     }
 }
 
+function destroyEE() {
+
+}
+
+
 function success() {
     target.style.stroke = "#393";
+    score++;
     console.log("SUCCESS!");
 }
