@@ -52,12 +52,14 @@ var targetFixedX = null;
 var targetFixedY = null;
 
 // Radius and width of the control ring
-var innerR = 30;
+var innerR = 40;
+var triangleSize = 30;
 var ringWidth = 20;
+var pointOffset = triangleSize - ringWidth;
 // Top angle of the triangle representing the EE
 var triAlpha = 45*Math.PI/180.0;
-var triHeightDiff = Math.round(innerR*Math.cos(triAlpha));
-var triWidth = Math.round((2*innerR-triHeightDiff)*Math.tan(triAlpha/2))*2;
+var triHeightDiff = Math.round(triangleSize*Math.cos(triAlpha));
+var triWidth = Math.round((2*triangleSize-triHeightDiff)*Math.tan(triAlpha/2))*2;
 
 function createEE() {
     var ws = document.getElementById("workspace");
@@ -149,7 +151,7 @@ function createTarget() {
     target.setAttribute("stroke-width", 4);
     target.style.fill = "none";
     target.style.stroke = "#933";
-    target.setAttribute("points", (-triWidth/2)+","+(-triHeightDiff)+","+(triWidth/2)+","+(-triHeightDiff)+","+ 0 +","+ (innerR));
+    target.setAttribute("points", (-triWidth/2)+","+(-triHeightDiff)+","+(triWidth/2)+","+(-triHeightDiff)+","+ 0 +","+ (innerR - pointOffset));
     target.setAttribute("transform", "translate(" + targetPos[0] + " " + targetPos[1] + ") rotate(" + targetRot + " " + 0 + " " + 0 + ")");
     //Initialize end-effector
     ws.appendChild(target);
@@ -188,6 +190,11 @@ function createArrows() {
     arrowUp.setAttribute("d", "M88 166.059V468c0 6.627 5.373 12 12 12h56c6.627 0 12-5.373 12-12V166.059h46.059c21.382 0 32.09-25.851 16.971-40.971l-86.059-86.059c-9.373-9.373-24.569-9.373-33.941 0l-86.059 86.059c-15.119 15.119-4.411 40.971 16.971 40.971H88z");
     arrowDown.setAttribute("d", "M168 345.941V44c0-6.627-5.373-12-12-12h-56c-6.627 0-12 5.373-12 12v301.941H41.941c-21.382 0-32.09 25.851-16.971 40.971l86.059 86.059c9.373 9.373 24.569 9.373 33.941 0l86.059-86.059c15.119-15.119 4.411-40.971-16.971-40.971H168z");
 
+    ws.appendChild(arrowRight);
+    ws.appendChild(arrowLeft);
+    ws.appendChild(arrowUp);
+    ws.appendChild(arrowDown);
+
     var horizontalArrowWidth = arrowLeft.getBBox().width * scale;
     var verticalArrowWidth = arrowDown.getBBox().width * scale;
     var horizontalArrowHeight = arrowLeft.getBBox().height * scale;
@@ -215,10 +222,7 @@ function createArrows() {
         + " " + (arrowDownYOffset + Math.round(rect.height/2))+ ") scale(" + scale + ")");
 
 
-    ws.appendChild(arrowRight);
-    ws.appendChild(arrowLeft);
-    ws.appendChild(arrowUp);
-    ws.appendChild(arrowDown);
+
 
     arrows = [arrowRight, arrowLeft, arrowUp, arrowDown];
 
@@ -228,7 +232,7 @@ function createArrows() {
 function resetPose() {
     var x = 0;
     var y = 0;
-    ee.setAttribute("points", (x-triWidth/2)+","+(y-triHeightDiff)+","+(x+triWidth/2)+","+(y-triHeightDiff)+","+(x)+","+(y+innerR));
+    ee.setAttribute("points", (x-triWidth/2)+","+(y-triHeightDiff)+","+(x+triWidth/2)+","+(y-triHeightDiff)+","+(x)+","+(y+innerR - pointOffset));
     ee.setAttribute("transform", "translate(" + pos[0] + " " + pos[1] + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
     if(ring) {
         ring.setAttribute("cx", pos[0]);
