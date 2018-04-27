@@ -4,7 +4,7 @@
  * Represented by a triangle.
  */
 
-var isOneTouch = true;
+var isOneTouch = false;
 var control = 0;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
@@ -27,7 +27,7 @@ var targetPos = null;
 var targetRot = null;
 
 // The global variables used by the arrows
-var scale = 0.1;
+var scale = 1;
 var arrowRight;
 var arrowLeft;
 var arrowUp;
@@ -54,7 +54,7 @@ var targetFixedY = null;
 // Radius and width of the control ring
 var innerR = 40;
 var triangleSize = 30;
-var ringWidth = 20;
+var ringWidth = 18;
 var pointOffset = triangleSize - ringWidth;
 // Top angle of the triangle representing the EE
 var triAlpha = 45*Math.PI/180.0;
@@ -180,40 +180,44 @@ function createArrows() {
     var ws = document.getElementById("workspace");
     var rect = ws.getBoundingClientRect();
 
+    // Arrow params
+    var arrowLength = 22;
+    var lipHeight = 6;
+    var arrowheadLength = 22;
+    var arrowWidth = 16;
+
     arrowRight = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowLeft = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowUp = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowDown = document.createElementNS('http://www.w3.org/2000/svg','path');
 
-    arrowRight.setAttribute("d", "M313.941 216H12c-6.627 0-12 5.373-12 12v56c0 6.627 5.373 12 12 12h301.941v46.059c0 21.382 25.851 32.09 40.971 16.971l86.059-86.059c9.373-9.373 9.373-24.569 0-33.941l-86.059-86.059c-15.119-15.119-40.971-4.411-40.971 16.971V216z");
-    arrowLeft.setAttribute("d", "M134.059 296H436c6.627 0 12-5.373 12-12v-56c0-6.627-5.373-12-12-12H134.059v-46.059c0-21.382-25.851-32.09-40.971-16.971L7.029 239.029c-9.373 9.373-9.373 24.569 0 33.941l86.059 86.059c15.119 15.119 40.971 4.411 40.971-16.971V296z");
-    arrowUp.setAttribute("d", "M88 166.059V468c0 6.627 5.373 12 12 12h56c6.627 0 12-5.373 12-12V166.059h46.059c21.382 0 32.09-25.851 16.971-40.971l-86.059-86.059c-9.373-9.373-24.569-9.373-33.941 0l-86.059 86.059c-15.119 15.119-4.411 40.971 16.971 40.971H88z");
-    arrowDown.setAttribute("d", "M168 345.941V44c0-6.627-5.373-12-12-12h-56c-6.627 0-12 5.373-12 12v301.941H41.941c-21.382 0-32.09 25.851-16.971 40.971l86.059 86.059c9.373 9.373 24.569 9.373 33.941 0l86.059-86.059c15.119-15.119 4.411-40.971-16.971-40.971H168z");
+    arrowRight.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
+    arrowLeft.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
+    arrowUp.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
+    arrowDown.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
+
+    arrowRight.style.fill = "#181acc";
+    arrowLeft.style.fill = "#181acc";
+    arrowUp.style.fill = "#cc070e";
+    arrowDown.style.fill = "#cc070e";
 
     ws.appendChild(arrowRight);
     ws.appendChild(arrowLeft);
     ws.appendChild(arrowUp);
     ws.appendChild(arrowDown);
 
-    var horizontalArrowWidth = arrowLeft.getBBox().width * scale;
-    var verticalArrowWidth = arrowDown.getBBox().width * scale;
-    var horizontalArrowHeight = arrowLeft.getBBox().height * scale;
-    var verticalArrowHeight = arrowDown.getBBox().height * scale;
-    var horizontalInitialY = arrowLeft.getBBox().y * scale;
-    var verticalInitialY = arrowDown.getBBox().y * scale;
-
     arrowRightXOffset = innerR + ringWidth;
-    arrowRightYOffset = -horizontalInitialY - horizontalArrowHeight/2;
-    arrowLeftXOffset = -(innerR + ringWidth + horizontalArrowWidth);
-    arrowLeftYOffset = -horizontalInitialY - horizontalArrowHeight/2;
-    arrowUpXOffset = -(verticalArrowWidth /2);
-    arrowUpYOffset = -verticalInitialY - (innerR + ringWidth) - verticalArrowHeight;
-    arrowDownXOffset = -(verticalArrowWidth /2);
-    arrowDownYOffset = -verticalInitialY + (innerR + ringWidth);
+    arrowRightYOffset = - arrowWidth / 2;
+    arrowLeftXOffset = - (innerR + ringWidth);
+    arrowLeftYOffset =  arrowWidth / 2;
+    arrowUpXOffset = - arrowWidth / 2;
+    arrowUpYOffset =  - (innerR + ringWidth);
+    arrowDownXOffset = arrowWidth / 2;
+    arrowDownYOffset = (innerR + ringWidth);
 
 
     arrowRight.setAttribute("transform", "translate(" + (arrowRightXOffset + Math.round(rect.width/2))
-        + " " + (arrowRightYOffset + Math.round(rect.height/2))+ ") scale(" + scale + ")");
+        + " " + (arrowRightYOffset + Math.round(rect.height/2))+ ") scale(" + scale + ")" + " rotate(90, 0, 0 )");
     arrowLeft.setAttribute("transform", "translate(" + (arrowLeftXOffset + Math.round(rect.width/2))
         + " " + (arrowLeftYOffset + Math.round(rect.height/2)) + ") scale(" + scale + ")");
     arrowUp.setAttribute("transform", "translate(" + (arrowUpXOffset + Math.round(rect.width/2))
@@ -239,10 +243,10 @@ function resetPose() {
         ring.setAttribute("cy", pos[1]);
     }
     if(arrows){
-        arrowRight.setAttribute("transform", "translate(" + (pos[0] + arrowRightXOffset) + " " + (pos[1] + arrowRightYOffset) + ") scale(" + scale + ")")
-        arrowLeft.setAttribute("transform", "translate(" + (pos[0] + arrowLeftXOffset) + " " + (pos[1] + arrowLeftYOffset) + ") scale(" + scale + ")")
-        arrowUp.setAttribute("transform", "translate(" + (pos[0] + arrowUpXOffset) + " " + (pos[1] + arrowUpYOffset) + ") scale(" + scale + ")")
-        arrowDown.setAttribute("transform", "translate(" + (pos[0] + arrowDownXOffset) + " " + (pos[1] + arrowDownYOffset) + ") scale(" + scale + ")")
+        arrowRight.setAttribute("transform", "translate(" + (pos[0] + arrowRightXOffset) + " " + (pos[1] + arrowRightYOffset) + ") scale(" + scale + ")" );
+        arrowLeft.setAttribute("transform", "translate(" + (pos[0] + arrowLeftXOffset) + " " + (pos[1] + arrowLeftYOffset) + ") scale(" + scale + ")" + " rotate(180, 0, 0 )");
+        arrowUp.setAttribute("transform", "translate(" + (pos[0] + arrowUpXOffset) + " " + (pos[1] + arrowUpYOffset) + ") scale(" + scale + ")" + " rotate(-90, 0, 0 )");
+        arrowDown.setAttribute("transform", "translate(" + (pos[0] + arrowDownXOffset) + " " + (pos[1] + arrowDownYOffset) + ") scale(" + scale + ")" + " rotate(90, 0, 0 )");
     }
 
     checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot);
@@ -317,15 +321,22 @@ function startDrag(evt, direction) {
     }else {
         ws.setAttributeNS(null, "onmousemove", "drag(evt, " + direction + ")");
 
+        if(direction == HORIZONTAL){
+            evt.target.style.fill = "#4a4aff"
+        }
+        else if(direction == VERTICAL){
+            evt.target.style.fill = "#ff070e"
+        }
         if (isOneTouch) {
             arrows.forEach(function(arrow) {
                arrow.setAttributeNS(null, "onclick", "stopDrag(evt, " + direction + ")");
             });
+            ws.setAttribute("onclick", "stopDrag(evt, " + direction + ")");
+            evt.stopPropagation();
         }
         else
             ws.setAttributeNS(null, "onmouseup", "stopDrag(evt, " + direction + ")");
 
-        ee.style.fill = "#9EE";
     }
 
 }
@@ -463,6 +474,7 @@ function stopDrag(evt, direction) {
                 ws.removeAttributeNS(null, "onmouseup");
             }
         } else {
+
             if (isOneTouch) {
                 arrowRight.setAttributeNS(null, "onclick", "startDrag(evt, HORIZONTAL)");
                 arrowLeft.setAttributeNS(null, "onclick", "startDrag(evt, HORIZONTAL)");
@@ -472,6 +484,10 @@ function stopDrag(evt, direction) {
             else {
                 ws.removeAttributeNS(null, "onmouseup");
             }
+            arrowRight.style.fill = "#181acc";
+            arrowLeft.style.fill = "#181acc";
+            arrowUp.style.fill = "#cc070e";
+            arrowDown.style.fill = "#cc070e";
         }
 
         ee.style.fill = "#ACC";
