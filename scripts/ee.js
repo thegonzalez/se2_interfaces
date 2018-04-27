@@ -4,8 +4,8 @@
  * Represented by a triangle.
  */
 
-var isOneTouch = false;
-var control = 0;
+var isOneTouch = true;
+var control = 1;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -355,6 +355,8 @@ function startRotate(evt) {
 
     if (isOneTouch) {
         ring.setAttributeNS(null, "onclick", "stopRotate(evt)");
+        ws.setAttribute("onclick","stopRotate(evt)");
+        evt.stopPropagation();
     }
     else
         ws.setAttributeNS(null, "onmouseup", "stopRotate(evt)");
