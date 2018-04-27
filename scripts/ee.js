@@ -5,7 +5,7 @@
  */
 
 var isOneTouch = true;
-var control = 0;
+var control = 1;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -152,8 +152,8 @@ function createTarget() {
     var ws = document.getElementById("workspace");
     var rect = ws.getBoundingClientRect();
     var edgeBuffer = innerR + ringWidth +(arrowLengthTot * scale);
-    targetPos = [edgeBuffer + 1*(rect.width - 2 * edgeBuffer),
-        edgeBuffer + 1*(rect.height - 2 * edgeBuffer)];
+    targetPos = [edgeBuffer + Math.random()*(rect.width - 2 * edgeBuffer),
+        edgeBuffer + Math.random()*(rect.height - 2 * edgeBuffer)];
     targetRot = Math.random()*360 - 180;
     target = document.createElementNS('http://www.w3.org/2000/svg','polygon');
     target.setAttribute("id", "target");
@@ -242,7 +242,12 @@ function resetPose() {
             (pos[1] + arrowDownYOffset) + ") scale(" + scale + ")" + " rotate(90, 0, 0 )");
     }
 
-    checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot);
+    if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
+        target.style.stroke = "#393";
+    }
+    else{
+        target.style.stroke = "#933";
+    }
 
 }
 
@@ -379,18 +384,6 @@ function drag(evt, direction) {
     resetPose();
 }
 
-function horizontalDrag(evt) {
-    var ws = document.getElementById("workspace");
-    var rect = ws.getBoundingClientRect();
-    var mouseX = evt.clientX - rect.left;
-    var mouseY = evt.clientY - rect.top;
-    var newPoint = [mouseX, mouseY];
-    var a = diff(newPoint, refPos);
-    pos = [startPos[0]+a[0], startPos[1]];
-    console.log("moved");
-    resetPose();
-}
-
 // Check if target is reached
 function checkGoal(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot){
     var threshold = 3;
@@ -400,12 +393,8 @@ function checkGoal(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot)
 
     console.log("xErr: " + xErr + "yErr: " + yErr+ "rotErr: " + rotErr);
 
-    if(xErr < threshold && yErr < threshold && rotErr < threshold){
-        success();
-    }
-    else{
-        target.style.stroke = "#933";
-    }
+    return (xErr < threshold && yErr < threshold && rotErr < threshold);
+
 
 }
 
@@ -485,6 +474,9 @@ function stopDrag(evt, direction) {
             arrowDown.style.fill = "#cc070e";
         }
 
+        if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
+            success();
+        }
         ee.style.fill = "#ACC";
         isTranslating = false;
     }
@@ -502,6 +494,9 @@ function stopRotate(evt) {
             ws.removeAttributeNS(null, "onmouseup");
         isRotating = false;
         ring.style.stroke = "#AAC";
+        if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
+            success();
+        }
     }
 }
 
