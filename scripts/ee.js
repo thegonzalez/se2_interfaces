@@ -5,7 +5,7 @@
  */
 
 var isOneTouch = true;
-var control = 1;
+var control = 0;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -50,6 +50,13 @@ const VERTICAL = 1;
 // The global variables used by the target control type
 var targetFixedX = null;
 var targetFixedY = null;
+
+// Arrow params
+var arrowShaftLength = 22;
+var lipHeight = 6;
+var arrowheadLength = 22;
+var arrowLengthTot = arrowShaftLength + arrowheadLength;
+var arrowWidth = 16;
 
 // Radius and width of the control ring
 var innerR = 40;
@@ -144,7 +151,9 @@ function startTargetDrag(evt) {
 function createTarget() {
     var ws = document.getElementById("workspace");
     var rect = ws.getBoundingClientRect();
-    targetPos = [innerR + Math.random()*(rect.width - 2*innerR), innerR + Math.random()*(rect.height-2*innerR)];
+    var edgeBuffer = innerR + ringWidth +(arrowLengthTot * scale);
+    targetPos = [edgeBuffer + 1*(rect.width - 2 * edgeBuffer),
+        edgeBuffer + 1*(rect.height - 2 * edgeBuffer)];
     targetRot = Math.random()*360 - 180;
     target = document.createElementNS('http://www.w3.org/2000/svg','polygon');
     target.setAttribute("id", "target");
@@ -178,33 +187,28 @@ function createRing() {
 
 function createArrows() {
     var ws = document.getElementById("workspace");
-    var rect = ws.getBoundingClientRect();
-
-    // Arrow params
-    var arrowLength = 22;
-    var lipHeight = 6;
-    var arrowheadLength = 22;
-    var arrowWidth = 16;
 
     arrowRight = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowLeft = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowUp = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowDown = document.createElementNS('http://www.w3.org/2000/svg','path');
 
-    arrowRight.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
-    arrowLeft.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
-    arrowUp.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
-    arrowDown.setAttribute("d", "M0,"+(0)+" h"+arrowLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight + (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+(lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowLength)+"z");
+    arrows = [arrowRight, arrowLeft, arrowUp, arrowDown];
+
+    arrows.forEach(function(arrow) {
+        arrow.setAttribute("d", "M0,"+(0)+" h"+arrowShaftLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight +
+            (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+
+            (lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowShaftLength)+"z");
+    });
 
     arrowRight.style.fill = "#181acc";
     arrowLeft.style.fill = "#181acc";
     arrowUp.style.fill = "#cc070e";
     arrowDown.style.fill = "#cc070e";
 
-    ws.appendChild(arrowRight);
-    ws.appendChild(arrowLeft);
-    ws.appendChild(arrowUp);
-    ws.appendChild(arrowDown);
+    arrows.forEach(function(arrow) {
+        ws.appendChild(arrow);
+    });
 
     arrowRightXOffset = innerR + ringWidth;
     arrowRightYOffset = - arrowWidth / 2;
@@ -215,22 +219,7 @@ function createArrows() {
     arrowDownXOffset = arrowWidth / 2;
     arrowDownYOffset = (innerR + ringWidth);
 
-
-    arrowRight.setAttribute("transform", "translate(" + (arrowRightXOffset + Math.round(rect.width/2))
-        + " " + (arrowRightYOffset + Math.round(rect.height/2))+ ") scale(" + scale + ")" + " rotate(90, 0, 0 )");
-    arrowLeft.setAttribute("transform", "translate(" + (arrowLeftXOffset + Math.round(rect.width/2))
-        + " " + (arrowLeftYOffset + Math.round(rect.height/2)) + ") scale(" + scale + ")");
-    arrowUp.setAttribute("transform", "translate(" + (arrowUpXOffset + Math.round(rect.width/2))
-        + " " + (arrowUpYOffset + Math.round(rect.height/2)) + ") scale(" + scale + ")");
-    arrowDown.setAttribute("transform", "translate(" + (arrowDownXOffset + Math.round(rect.width/2))
-        + " " + (arrowDownYOffset + Math.round(rect.height/2))+ ") scale(" + scale + ")");
-
-
-
-
-    arrows = [arrowRight, arrowLeft, arrowUp, arrowDown];
-
-
+    // The transform attribute gets set in resetPose()
 }
 
 function resetPose() {
@@ -243,10 +232,14 @@ function resetPose() {
         ring.setAttribute("cy", pos[1]);
     }
     if(arrows){
-        arrowRight.setAttribute("transform", "translate(" + (pos[0] + arrowRightXOffset) + " " + (pos[1] + arrowRightYOffset) + ") scale(" + scale + ")" );
-        arrowLeft.setAttribute("transform", "translate(" + (pos[0] + arrowLeftXOffset) + " " + (pos[1] + arrowLeftYOffset) + ") scale(" + scale + ")" + " rotate(180, 0, 0 )");
-        arrowUp.setAttribute("transform", "translate(" + (pos[0] + arrowUpXOffset) + " " + (pos[1] + arrowUpYOffset) + ") scale(" + scale + ")" + " rotate(-90, 0, 0 )");
-        arrowDown.setAttribute("transform", "translate(" + (pos[0] + arrowDownXOffset) + " " + (pos[1] + arrowDownYOffset) + ") scale(" + scale + ")" + " rotate(90, 0, 0 )");
+        arrowRight.setAttribute("transform", "translate(" + (pos[0] + arrowRightXOffset) + " " +
+            (pos[1] + arrowRightYOffset) + ") scale(" + scale + ")" );
+        arrowLeft.setAttribute("transform", "translate(" + (pos[0] + arrowLeftXOffset) + " " +
+            (pos[1] + arrowLeftYOffset) + ") scale(" + scale + ")" + " rotate(180, 0, 0 )");
+        arrowUp.setAttribute("transform", "translate(" + (pos[0] + arrowUpXOffset) + " " +
+            (pos[1] + arrowUpYOffset) + ") scale(" + scale + ")" + " rotate(-90, 0, 0 )");
+        arrowDown.setAttribute("transform", "translate(" + (pos[0] + arrowDownXOffset) + " " +
+            (pos[1] + arrowDownYOffset) + ") scale(" + scale + ")" + " rotate(90, 0, 0 )");
     }
 
     checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot);
