@@ -4,8 +4,8 @@
  * Represented by a triangle.
  */
 
-var isOneTouch = true;
-var control = 1;
+var isOneTouch = false;
+var control = 2;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -23,8 +23,12 @@ var startPos = null;
 
 var pos = null;
 var rot = null;
+
+// Target Params
 var targetPos = null;
 var targetRot = null;
+var targetRed = "#933";
+var targetGreen = "#393";
 
 // The global variables used by the arrows
 var scale = 1;
@@ -50,6 +54,8 @@ const VERTICAL = 1;
 // The global variables used by the target control type
 var targetFixedX = null;
 var targetFixedY = null;
+var ghost;
+var lineThickness = 2;
 
 // Arrow params
 var arrowShaftLength = 22;
@@ -63,6 +69,7 @@ var innerR = 40;
 var triangleSize = 30;
 var ringWidth = 18;
 var pointOffset = triangleSize - ringWidth;
+
 // Top angle of the triangle representing the EE
 var triAlpha = 45*Math.PI/180.0;
 var triHeightDiff = Math.round(triangleSize*Math.cos(triAlpha));
@@ -71,13 +78,13 @@ var triWidth = Math.round((2*triangleSize-triHeightDiff)*Math.tan(triAlpha/2))*2
 function createEE() {
     var ws = document.getElementById("workspace");
     var rect = ws.getBoundingClientRect();
-    ee = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    ee = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
     ee.setAttribute("id", "ee");
     ee.style.fill = "#ACC";
     ee.style.stroke = "#333";
 
     //Initialize end-effector
-    pos = [Math.round(rect.width/2), Math.round(rect.height/2)];
+    pos = [Math.round(rect.width / 2), Math.round(rect.height / 2)];
     rot = 0;
 
     ee.setAttribute("class", "draggable");
@@ -94,32 +101,34 @@ function createEE() {
         createRing();
         createArrows();
         if (isOneTouch) {
-
-                arrowRight.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
-                arrowLeft.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
-                arrowUp.setAttribute("onclick", "startDrag(evt, VERTICAL)");
-                arrowDown.setAttribute("onclick", "startDrag(evt, VERTICAL)");
-
+            arrowRight.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
+            arrowLeft.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
+            arrowUp.setAttribute("onclick", "startDrag(evt, VERTICAL)");
+            arrowDown.setAttribute("onclick", "startDrag(evt, VERTICAL)");
         }
         else {
-
-                arrowRight.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
-                arrowLeft.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
-                arrowUp.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
-                arrowDown.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
-
+            arrowRight.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
+            arrowLeft.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
+            arrowUp.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
+            arrowDown.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
         }
     }
-    else if (controlTypes[control] === "target"){
-        ws.setAttribute("onmousemove", "startTargetDrag(evt)");
+    else if (controlTypes[control] === "target") {
+        createGhost();
+        if(isOneTouch) {
+            ws.setAttribute("onclick", "startGhost(evt)");
+        }
+        else {
+            ws.setAttribute("onmousedown", "startGhost(evt)");
+        }
     }
-    else if (controlTypes[control] === "cardinal_speech"){
+    else if (controlTypes[control] === "cardinal_speech") {
 
     }
-    else if (controlTypes[control] === "trajectory_speech"){
+    else if (controlTypes[control] === "trajectory_speech") {
 
     }
-    else if (controlTypes[control] === "grid_speech"){
+    else if (controlTypes[control] === "grid_speech") {
 
     }
     else {
@@ -132,20 +141,16 @@ function createEE() {
     resetPose();
 }
 
-
-function startArrowDrag() {
-    //TODO
-}
-
-function startTargetDrag(evt) {
-    console.log("We are moving, and the event is: " + evt);
-    ee.setAttribute("transform", "translate(" + evt.offsetX + " " + evt.offsetY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
-    checkGoal(evt.offsetX, evt.offsetY, targetPos[0], targetPos[1], rot, targetRot);
-    //TODO Check to see if you made it
-    if (isOneTouch)
-        ee.setAttributeNS(null, "onclick", "pivot(evt)");
-    else
-        ee.setAttributeNS(null, "onmousedown", "pivot(evt)");
+function createGhost(){
+    var ws = document.getElementById("workspace");
+    ghost = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    ghost.setAttribute('x1', 0);
+    ghost.setAttribute('y1', 0);
+    ghost.setAttribute('x2', 0);
+    ghost.setAttribute('y2', 0);
+    ghost.setAttribute('stroke', "red");
+    ghost.setAttribute('stroke-width', lineThickness);
+    ws.appendChild(ghost);
 }
 
 function createTarget() {
@@ -159,7 +164,7 @@ function createTarget() {
     target.setAttribute("id", "target");
     target.setAttribute("stroke-width", 4);
     target.style.fill = "none";
-    target.style.stroke = "#933";
+    target.style.stroke = targetRed;
     target.setAttribute("points", (-triWidth/2)+","+(-triHeightDiff)+","+(triWidth/2)+","+(-triHeightDiff)+","+ 0 +","+ (innerR - pointOffset));
     target.setAttribute("transform", "translate(" + targetPos[0] + " " + targetPos[1] + ") rotate(" + targetRot + " " + 0 + " " + 0 + ")");
     //Initialize end-effector
@@ -222,6 +227,83 @@ function createArrows() {
     // The transform attribute gets set in resetPose()
 }
 
+
+function startGhost(evt) {
+    var ws = document.getElementById("workspace");
+    targetFixedX = evt.offsetX;
+    targetFixedY = evt.offsetY;
+    ws.setAttribute("onmousemove", "drawGhost(evt)");
+    if (isOneTouch) {
+        ws.setAttribute("onclick", "moveEE(evt)");
+    }
+    else {
+        ws.setAttribute("onmouseup", "moveEE(evt)");
+    }
+}
+
+function startTargetDrag(evt) {
+    console.log("We are moving, and the event is: " + evt);
+    ee.setAttribute("transform", "translate(" + evt.offsetX + " " + evt.offsetY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
+    checkGoal(evt.offsetX, evt.offsetY, targetPos[0], targetPos[1], rot, targetRot);
+    //TODO Check to see if you made it
+    if (isOneTouch)
+        ee.setAttributeNS(null, "onclick", "pivot(evt)");
+    else
+        ee.setAttributeNS(null, "onmousedown", "pivot(evt)");
+}
+
+function drawGhost(evt) {
+    ghost.setAttribute('x1', targetFixedX);
+    ghost.setAttribute('y1', targetFixedY);
+    ghost.setAttribute('x2', evt.offsetX);
+    ghost.setAttribute('y2', evt.offsetY);
+
+    var deltaX = evt.offsetX - targetFixedX;
+    var deltaY = evt.offsetY - targetFixedY;
+    var angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+    angle -= 90;
+    if (angle > 180)
+        angle -= 360;
+    if (angle < -180)
+        angle += 360;
+
+    if(checkGoal(targetFixedX, targetFixedY, targetPos[0], targetPos[1], angle, targetRot)){
+        target.setAttribute("stroke-dasharray", "10, 5");
+        target.style.stroke = targetGreen;
+    }
+    else {
+        target.removeAttribute("stroke-dasharray");
+        target.style.stroke = targetRed;
+    }
+}
+
+function moveEE(evt) {
+    var ws = document.getElementById("workspace");
+    console.log("moving");
+    ws.removeAttribute("onmousemove");
+    target.removeAttribute("stroke-dasharray");
+    pos = [targetFixedX, targetFixedY];
+    var deltaX = evt.offsetX - targetFixedX;
+    var deltaY = evt.offsetY - targetFixedY;
+    var angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+    angle -= 90;
+    rot = angle;
+    if (rot > 180)
+        rot -= 360;
+    if (rot < -180)
+        rot += 360;
+
+    resetPose();
+    if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
+        success();
+    }
+
+
+    if (isOneTouch)
+        ws.setAttribute("onclick", "startGhost(evt)");
+
+}
+
 function resetPose() {
     var x = 0;
     var y = 0;
@@ -243,10 +325,10 @@ function resetPose() {
     }
 
     if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
-        target.style.stroke = "#393";
+        target.style.stroke = targetGreen;
     }
     else{
-        target.style.stroke = "#933";
+        target.style.stroke = targetRed;
     }
 
 }
@@ -506,7 +588,7 @@ function destroyEE() {
 
 
 function success() {
-    target.style.stroke = "#393";
+    target.style.stroke = targetGreen;
     score++;
     console.log("SUCCESS!");
 }
