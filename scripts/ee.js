@@ -5,7 +5,7 @@
  */
 
 var isOneTouch = false;
-var control = 2;
+var control = 0;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -63,6 +63,11 @@ var lipHeight = 6;
 var arrowheadLength = 22;
 var arrowLengthTot = arrowShaftLength + arrowheadLength;
 var arrowWidth = 16;
+
+// Trajectory arrow params
+var numTrajArrows = 20;
+var trajArrowLength = 100;
+var trajArrows;
 
 // Radius and width of the control ring
 var innerR = 40;
@@ -126,10 +131,10 @@ function createEE() {
 
     }
     else if (controlTypes[control] === "trajectory_speech") {
-
+        createTrajectoryArrows();
     }
     else if (controlTypes[control] === "grid_speech") {
-
+        createSpeechGrid();
     }
     else {
         console.error("Please select a valid control");
@@ -139,6 +144,27 @@ function createEE() {
 
     createTarget();
     resetPose();
+}
+
+
+
+function createTrajectoryArrows() {
+    var ws = document.getElementById("workspace");
+    trajArrows = [];
+    for(var i = 0; i < numTrajArrows; i++){
+        var angle = ((2 * Math.PI) / numTrajArrows) * i;
+        var x = Math.cos(angle) * trajArrowLength;
+        var y = Math.sin(angle) * trajArrowLength;
+        var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        arrow.setAttribute('x1', 0);
+        arrow.setAttribute('y1', 0);
+        arrow.setAttribute('x2', x);
+        arrow.setAttribute('y2', y);
+        arrow.setAttribute('stroke', "red");
+        arrow.setAttribute('stroke-width', lineThickness);
+        moveObject(arrow, pos[0], pos[1], rot);
+        ws.appendChild(arrow);
+    }
 }
 
 function createGhost(){
@@ -166,7 +192,7 @@ function createTarget() {
     target.style.fill = "none";
     target.style.stroke = targetRed;
     target.setAttribute("points", (-triWidth/2)+","+(-triHeightDiff)+","+(triWidth/2)+","+(-triHeightDiff)+","+ 0 +","+ (innerR - pointOffset));
-    target.setAttribute("transform", "translate(" + targetPos[0] + " " + targetPos[1] + ") rotate(" + targetRot + " " + 0 + " " + 0 + ")");
+    moveObject(target, targetPos[0], targetPos[1], targetRot);
     //Initialize end-effector
     ws.appendChild(target);
 }
@@ -176,13 +202,14 @@ function createRing() {
     var rect = ws.getBoundingClientRect();
     ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     ring.setAttribute("id", "ring");
-    ring.setAttribute("cx", Math.round(rect.width/2));
-    ring.setAttribute("cy", Math.round(rect.height/2));
+    // ring.setAttribute("cx", Math.round(rect.width/2));
+    // ring.setAttribute("cy", Math.round(rect.height/2));
     ring.setAttribute("r", innerR + ringWidth/2);
     ring.setAttribute("stroke-width", ringWidth);
     ring.style.fill = "none";
     ring.style.stroke = "#AAC";
     ring.setAttribute("class", "draggable");
+    ring.setAttribute("stroke-dasharray", "30, 0.3");
     if (isOneTouch)
         ring.setAttributeNS(null, "onclick", "startRotate(evt)");
     else
@@ -234,23 +261,13 @@ function startGhost(evt) {
     targetFixedY = evt.offsetY;
     ws.setAttribute("onmousemove", "drawGhost(evt)");
     if (isOneTouch) {
-        ws.setAttribute("onclick", "moveEE(evt)");
+        ws.setAttribute("onclick", "targetMoveEE(evt)");
     }
     else {
-        ws.setAttribute("onmouseup", "moveEE(evt)");
+        ws.setAttribute("onmouseup", "targetMoveEE(evt)");
     }
 }
 
-function startTargetDrag(evt) {
-    console.log("We are moving, and the event is: " + evt);
-    ee.setAttribute("transform", "translate(" + evt.offsetX + " " + evt.offsetY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
-    checkGoal(evt.offsetX, evt.offsetY, targetPos[0], targetPos[1], rot, targetRot);
-    //TODO Check to see if you made it
-    if (isOneTouch)
-        ee.setAttributeNS(null, "onclick", "pivot(evt)");
-    else
-        ee.setAttributeNS(null, "onmousedown", "pivot(evt)");
-}
 
 function drawGhost(evt) {
     ghost.setAttribute('x1', targetFixedX);
@@ -277,7 +294,7 @@ function drawGhost(evt) {
     }
 }
 
-function moveEE(evt) {
+function targetMoveEE(evt) {
     var ws = document.getElementById("workspace");
     console.log("moving");
     ws.removeAttribute("onmousemove");
@@ -307,21 +324,22 @@ function moveEE(evt) {
 function resetPose() {
     var x = 0;
     var y = 0;
-    ee.setAttribute("points", (x-triWidth/2)+","+(y-triHeightDiff)+","+(x+triWidth/2)+","+(y-triHeightDiff)+","+(x)+","+(y+innerR - pointOffset));
-    ee.setAttribute("transform", "translate(" + pos[0] + " " + pos[1] + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
+    ee.setAttribute("points", (x-triWidth/2)+","+(y-triHeightDiff)+","+(x+triWidth/2)+","+(y-triHeightDiff)+","+(x)+","+
+        (y+innerR - pointOffset));
+    moveObject(ee, pos[0], pos[1], rot);
     if(ring) {
-        ring.setAttribute("cx", pos[0]);
-        ring.setAttribute("cy", pos[1]);
+        moveObject(ring, pos[0], pos[1], rot);
     }
+    // ring.setAttribute("transform", "rotate("+ rot + " " + 0 + " " + 0 + ")");
+    // if(ring) {
+    //     ring.setAttribute("cx", pos[0]);
+    //     ring.setAttribute("cy", pos[1]);
+    // }
     if(arrows){
-        arrowRight.setAttribute("transform", "translate(" + (pos[0] + arrowRightXOffset) + " " +
-            (pos[1] + arrowRightYOffset) + ") scale(" + scale + ")" );
-        arrowLeft.setAttribute("transform", "translate(" + (pos[0] + arrowLeftXOffset) + " " +
-            (pos[1] + arrowLeftYOffset) + ") scale(" + scale + ")" + " rotate(180, 0, 0 )");
-        arrowUp.setAttribute("transform", "translate(" + (pos[0] + arrowUpXOffset) + " " +
-            (pos[1] + arrowUpYOffset) + ") scale(" + scale + ")" + " rotate(-90, 0, 0 )");
-        arrowDown.setAttribute("transform", "translate(" + (pos[0] + arrowDownXOffset) + " " +
-            (pos[1] + arrowDownYOffset) + ") scale(" + scale + ")" + " rotate(90, 0, 0 )");
+        moveObjectAndScale(arrowRight, pos[0] + arrowRightXOffset, pos[1] + arrowRightYOffset, 0, scale);
+        moveObjectAndScale(arrowLeft, pos[0] + arrowLeftXOffset, pos[1] + arrowLeftYOffset, 180, scale);
+        moveObjectAndScale(arrowUp, pos[0] + arrowUpXOffset, pos[1] + arrowUpYOffset, -90, scale);
+        moveObjectAndScale(arrowDown, pos[0] + arrowDownXOffset, pos[1] + arrowDownYOffset, 90, scale);
     }
 
     if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
@@ -333,51 +351,9 @@ function resetPose() {
 
 }
 
-function pivot(evt) {
-    var ws = document.getElementById("workspace");
-    targetFixedX = evt.offsetX;
-    targetFixedY = evt.offsetY;
-    ws.setAttribute("onmousemove", "point(evt)");
-    if(!isOneTouch){
-        ws.setAttribute("onmouseup", "stopPoint(evt)");
-    }
-}
 
-function point(evt) {
-    var ws = document.getElementById("workspace");
-    var deltaX = evt.offsetX - targetFixedX;
-    var deltaY = evt.offsetY - targetFixedY;
-    var angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-    angle -= 90;
-    rot = angle;
 
-    if (rot > 180)
-        rot -= 360;
-    if (rot < -180)
-        rot += 360;
 
-    ee.setAttribute("transform", "translate(" + targetFixedX + " " + targetFixedY + ") rotate(" + rot + " " + 0 + " " + 0 + ")");
-    checkGoal(targetFixedX, targetFixedY, targetPos[0], targetPos[1], rot, targetRot);
-    if(isOneTouch){
-        ws.setAttribute("onclick", "stopPoint(evt)");
-    }
-    else{
-        ws.setAttribute("onmouseup", "stopPoint(evt)");
-    }
-}
-
-function stopPoint(evt){
-    var ws = document.getElementById("workspace");
-    if(isOneTouch){
-        ws.removeAttribute("onclick");
-        ee.removeAttribute("onclick");
-    }
-    else{
-        ws.removeAttribute("onmouseup");
-        ee.removeAttribute("onmousedown");
-    }
-    ws.setAttribute("onmousemove", "startTargetDrag(evt)");
-}
 
 function startDrag(evt, direction) {
     console.log("drag starts");
@@ -473,8 +449,6 @@ function checkGoal(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot)
     var yErr = Math.abs(currPoseY-goalPoseY);
     var rotErr = Math.abs(currRot-goalRot);
 
-    console.log("xErr: " + xErr + "yErr: " + yErr+ "rotErr: " + rotErr);
-
     return (xErr < threshold && yErr < threshold && rotErr < threshold);
 
 
@@ -557,8 +531,7 @@ function stopDrag(evt, direction) {
         }
 
         if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
-            success();
-        }
+            success(); }
         ee.style.fill = "#ACC";
         isTranslating = false;
     }
@@ -583,12 +556,27 @@ function stopRotate(evt) {
 }
 
 function destroyEE() {
+    var ws = document.getElementById("workspace");
+    while(ws.hasChildNodes()){
+        ws.removeChild(ws.firstChild);
+    }
+}
 
+function moveObject(object, x, y, theta) {
+    object.setAttribute("transform", "translate(" + x + " " + y + ") rotate(" + theta + " " + 0 + " " + 0 + ")");
+    // This is where you can log the object, and how it is moving
+}
+
+function moveObjectAndScale(object, x, y, theta, scale) {
+    object.setAttribute("transform", "translate(" + x + " " + y + ") rotate(" + theta + " " + 0 + " " + 0 + ") scale(" + scale + ")" );
+    // This is where you can log the object, and how it is moving
 }
 
 
 function success() {
     target.style.stroke = targetGreen;
     score++;
+    destroyEE();
+    createEE();
     console.log("SUCCESS!");
 }
