@@ -5,7 +5,7 @@
  */
 
 var isOneTouch = false;
-var control = 0;
+var control = 5;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -29,6 +29,8 @@ var targetPos = null;
 var targetRot = null;
 var targetRed = "#933";
 var targetGreen = "#393";
+var threshold = 3;
+
 
 // The global variables used by the arrows
 var scale = 1;
@@ -80,6 +82,9 @@ var triAlpha = 45*Math.PI/180.0;
 var triHeightDiff = Math.round(triangleSize*Math.cos(triAlpha));
 var triWidth = Math.round((2*triangleSize-triHeightDiff)*Math.tan(triAlpha/2))*2;
 
+// Grid params
+var gridSideLength = 3;
+
 function createEE() {
     var ws = document.getElementById("workspace");
     var rect = ws.getBoundingClientRect();
@@ -128,13 +133,14 @@ function createEE() {
         }
     }
     else if (controlTypes[control] === "cardinal_speech") {
-
+        createCardinalSpeech();
     }
     else if (controlTypes[control] === "trajectory_speech") {
         createTrajectoryArrows();
     }
     else if (controlTypes[control] === "grid_speech") {
-        createSpeechGrid();
+        createGridSpeech();
+        addGrid(0, 0, rect.width, rect.height, gridSideLength);
     }
     else {
         console.error("Please select a valid control");
@@ -444,7 +450,6 @@ function drag(evt, direction) {
 
 // Check if target is reached
 function checkGoal(currPoseX, currPoseY, goalPoseX, goalPoseY, currRot, goalRot){
-    var threshold = 3;
     var xErr = Math.abs(currPoseX-goalPoseX);
     var yErr = Math.abs(currPoseY-goalPoseY);
     var rotErr = Math.abs(currRot-goalRot);
