@@ -15,7 +15,7 @@ function addGrid(lowerX, lowerY, upperX, upperY, sideLength){
 
         pos = [midX, midY];
         resetPose();
-        addGrid(0, 0, box.width, box.height, gridSideLength);
+        addPie(0, 360, 4);
     }
     else {
 
@@ -49,4 +49,60 @@ function addGrid(lowerX, lowerY, upperX, upperY, sideLength){
         }
 
     }
+}
+
+function addPie(begSlice, endSlice, numSlices) {
+    var ws = document.getElementById("workspace");
+    var box = ws.getBoundingClientRect();
+
+    if(begSlice < 0 || endSlice > 360){
+        console.error("The slice range is not in bounds");
+        return;
+    }
+
+    $(".slice").remove();
+
+    if(endSlice - begSlice < threshold * 2){
+        rot = (endSlice + begSlice) / 2;
+        rot = 270 - rot;
+        if (rot > 180)
+            rot -= 360;
+        if (rot < -180)
+            rot += 360;
+        console.log("rot: " + rot);
+        resetPose();
+        addGrid(0, 0, box.width, box.height, gridSideLength);
+        // addPie(0, 360, 4);
+    }
+    else {
+        var radius = 50;
+        var sliceWidth = (endSlice - begSlice) / numSlices;
+        var sliceWidthRad = sliceWidth * (Math.PI / 180);
+
+        for (var i = 0; i < numSlices; i++) {
+            var slice = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            var d = 'M 0,0 ' + radius + ",0" + " A" + radius + "," + radius + " 0 0,0 " +
+                radius * Math.cos(sliceWidthRad) + "," + String(-radius * Math.sin(sliceWidthRad)) + " z";
+            console.log(d);
+            slice.setAttribute('d', d);
+            slice.setAttribute('fill', colors[i]);
+            slice.setAttribute('class', 'slice');
+            slice.setAttribute('id', (i + 1));
+            var begThisSlice = (i * sliceWidth) + begSlice;
+            var endThisSlice = begThisSlice + sliceWidth;
+            moveObject(slice, pos[0], pos[1], -begThisSlice);
+            slice.setAttribute('onclick', 'addPie(' + begThisSlice + ',' + endThisSlice + ',' + numSlices + ')');
+            ws.appendChild(slice);
+
+        }
+        if (target) {
+            ws.appendChild(target);
+        }
+
+        if (ee) {
+            ws.appendChild(ee);
+        }
+    }
+
+
 }

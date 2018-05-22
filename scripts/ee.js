@@ -67,7 +67,7 @@ var arrowLengthTot = arrowShaftLength + arrowheadLength;
 var arrowWidth = 16;
 
 // Trajectory arrow params
-var numTrajArrows = 20;
+var numTrajArrows = 10;
 var trajArrowLength = 100;
 var trajArrows;
 
@@ -84,6 +84,9 @@ var triWidth = Math.round((2*triangleSize-triHeightDiff)*Math.tan(triAlpha/2))*2
 
 // Grid params
 var gridSideLength = 3;
+
+// Pie params
+var numSlices = 4;
 
 function createEE() {
     var ws = document.getElementById("workspace");
@@ -107,7 +110,6 @@ function createEE() {
         createRing();
     }
     else if (controlTypes[control] === "arrows") {
-        ee.setAttributeNS(null, "onmousedown", "startArrowDrag(evt)");
         createRing();
         createArrows();
         if (isOneTouch) {
@@ -140,6 +142,7 @@ function createEE() {
     }
     else if (controlTypes[control] === "grid_speech") {
         createGridSpeech();
+        // addPie(0, 360, 4);
         addGrid(0, 0, rect.width, rect.height, gridSideLength);
     }
     else {
@@ -168,6 +171,7 @@ function createTrajectoryArrows() {
         arrow.setAttribute('y2', y);
         arrow.setAttribute('stroke', "red");
         arrow.setAttribute('stroke-width', lineThickness);
+        arrow.setAttribute('value', x + "," + y);
         moveObject(arrow, pos[0], pos[1], rot);
         ws.appendChild(arrow);
     }
@@ -560,11 +564,19 @@ function stopRotate(evt) {
     }
 }
 
-function destroyEE() {
+function continuousMove(x, y) {
+
+}
+
+function clearWorkspace() {
     var ws = document.getElementById("workspace");
     while(ws.hasChildNodes()){
         ws.removeChild(ws.firstChild);
     }
+    ws.removeAttribute("onmousemove");
+    ws.removeAttribute("onclick");
+    ws.removeAttribute("onmousedown");
+    ws.removeAttribute("onmouseup");
 }
 
 function moveObject(object, x, y, theta) {
@@ -581,7 +593,7 @@ function moveObjectAndScale(object, x, y, theta, scale) {
 function success() {
     target.style.stroke = targetGreen;
     score++;
-    destroyEE();
+    clearWorkspace();
     createEE();
     console.log("SUCCESS!");
 }
