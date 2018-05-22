@@ -11,19 +11,39 @@
 </head>
 <body onload="loadInterface()">
 
+<select id="guiSelect"  onchange="guiUpdate()">
+    <option>Arrows</option>
+    <option>Drag</option>
+    <option>Target</option>
+    <option>Cardinal Speech</option>
+    <option>Trajectory Speech</option>
+    <option>Grid Speech</option>
+</select>
+
+
 <div class="wrapper">
     <div class="content">
         <svg class="workspace" id="workspace">
         </svg>
     </div>
 </div>
+
+
+<input type="range" min="3" max="50" value="50" id="myRange">
+
+
 <!-- Scripts -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>
+<script src="scripts/annyang.js"></script>
+
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>-->
 
 <script src="scripts/ee.js"></script>
 <script src="scripts/index.js"></script>
-<!--<script src="scripts/speech.js"></script>-->
+<script src="scripts/cardinalSpeech.js"></script>
+<script src="scripts/gridSpeech.js"></script>
+<script src="scripts/grid.js"></script>
+<!--<script src="scripts/google_speech.js"></script>-->
 
 </body>
 </html>
