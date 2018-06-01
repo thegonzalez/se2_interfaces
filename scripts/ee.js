@@ -5,7 +5,7 @@
  */
 
 var isOneTouch = false;
-var control = 5;
+var control = 4;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -139,6 +139,7 @@ function createEE() {
     }
     else if (controlTypes[control] === "trajectory_speech") {
         createTrajectoryArrows();
+        createTrajSpeech();
     }
     else if (controlTypes[control] === "grid_speech") {
         createGridSpeech();
@@ -162,8 +163,10 @@ function createTrajectoryArrows() {
     trajArrows = [];
     for(var i = 0; i < numTrajArrows; i++){
         var angle = ((2 * Math.PI) / numTrajArrows) * i;
-        var x = Math.cos(angle) * trajArrowLength;
-        var y = Math.sin(angle) * trajArrowLength;
+        var unitX = Math.cos(angle);
+        var unitY = Math.sin(angle);
+        var x = unitX * trajArrowLength;
+        var y = unitY * trajArrowLength;
         var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         arrow.setAttribute('x1', 0);
         arrow.setAttribute('y1', 0);
@@ -171,8 +174,10 @@ function createTrajectoryArrows() {
         arrow.setAttribute('y2', y);
         arrow.setAttribute('stroke', "red");
         arrow.setAttribute('stroke-width', lineThickness);
-        arrow.setAttribute('value', x + "," + y);
+        arrow.setAttribute('id', (i + 1));
+        arrow.setAttribute('value', String(unitX + "," + unitY));
         moveObject(arrow, pos[0], pos[1], rot);
+        trajArrows.push(arrow);
         ws.appendChild(arrow);
     }
 }
@@ -340,16 +345,19 @@ function resetPose() {
     if(ring) {
         moveObject(ring, pos[0], pos[1], rot);
     }
-    // ring.setAttribute("transform", "rotate("+ rot + " " + 0 + " " + 0 + ")");
-    // if(ring) {
-    //     ring.setAttribute("cx", pos[0]);
-    //     ring.setAttribute("cy", pos[1]);
-    // }
+
     if(arrows){
         moveObjectAndScale(arrowRight, pos[0] + arrowRightXOffset, pos[1] + arrowRightYOffset, 0, scale);
         moveObjectAndScale(arrowLeft, pos[0] + arrowLeftXOffset, pos[1] + arrowLeftYOffset, 180, scale);
         moveObjectAndScale(arrowUp, pos[0] + arrowUpXOffset, pos[1] + arrowUpYOffset, -90, scale);
         moveObjectAndScale(arrowDown, pos[0] + arrowDownXOffset, pos[1] + arrowDownYOffset, 90, scale);
+    }
+
+    if(trajArrows){
+        trajArrows.forEach(function (arrow) {
+            moveObject(arrow, pos[0], pos[1], 0);
+
+        });
     }
 
     if(checkGoal(pos[0], pos[1], targetPos[0], targetPos[1], rot, targetRot)){
