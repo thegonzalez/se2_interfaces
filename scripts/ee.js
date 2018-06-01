@@ -5,7 +5,7 @@
  */
 
 var isOneTouch = false;
-var control = 4;
+var control = 5;
 var controlTypes = ["arrows", "drag", "target", "cardinal_speech", "trajectory_speech", "grid_speech"];
 
 
@@ -66,10 +66,12 @@ var arrowheadLength = 22;
 var arrowLengthTot = arrowShaftLength + arrowheadLength;
 var arrowWidth = 16;
 
-// Trajectory arrow params
+// Trajectory arrow params and variables
 var numTrajArrows = 10;
 var trajArrowLength = 100;
+var trajFontSize = 30;
 var trajArrows;
+var trajNums;
 
 // Radius and width of the control ring
 var innerR = 40;
@@ -161,12 +163,14 @@ function createEE() {
 function createTrajectoryArrows() {
     var ws = document.getElementById("workspace");
     trajArrows = [];
+    trajNums = [];
     for(var i = 0; i < numTrajArrows; i++){
         var angle = ((2 * Math.PI) / numTrajArrows) * i;
         var unitX = Math.cos(angle);
         var unitY = Math.sin(angle);
         var x = unitX * trajArrowLength;
         var y = unitY * trajArrowLength;
+
         var arrow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         arrow.setAttribute('x1', 0);
         arrow.setAttribute('y1', 0);
@@ -179,6 +183,14 @@ function createTrajectoryArrows() {
         moveObject(arrow, pos[0], pos[1], rot);
         trajArrows.push(arrow);
         ws.appendChild(arrow);
+
+        var num = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        num.setAttribute('x', x * 1.2);
+        num.setAttribute('y', y * 1.2);
+        num.style.fontSize = trajFontSize + "px";
+        num.innerHTML = i;
+        trajNums.push(num);
+        ws.appendChild(num);
     }
 }
 
@@ -357,6 +369,12 @@ function resetPose() {
         trajArrows.forEach(function (arrow) {
             moveObject(arrow, pos[0], pos[1], 0);
 
+        });
+    }
+
+    if(trajNums){
+        trajNums.forEach(function (num) {
+            moveObject(num, pos[0], pos[1], 0);
         });
     }
 

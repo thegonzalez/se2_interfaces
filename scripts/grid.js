@@ -8,6 +8,7 @@ function addGrid(lowerX, lowerY, upperX, upperY, sideLength){
     var ws = document.getElementById("workspace");
     var box = ws.getBoundingClientRect();
     $('rect').remove();
+    $('text').remove();
 
     if(upperX - lowerX < (threshold * 3)){
         var midX = (upperX - lowerX) / 2 + lowerX;
@@ -21,6 +22,8 @@ function addGrid(lowerX, lowerY, upperX, upperY, sideLength){
 
         var width = (upperX - lowerX) / sideLength;
         var height = (upperY - lowerY) / sideLength;
+        var textSize = width / 5;
+
         var count = 1;
         for (var j = 0; j < sideLength; j++) {
             for (var i = 0; i < sideLength; i++) {
@@ -36,6 +39,14 @@ function addGrid(lowerX, lowerY, upperX, upperY, sideLength){
                     sideLength + ")");
                 rect.setAttribute('fill', colors[count - 1]);
                 ws.appendChild(rect);
+
+                var gridNum = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                gridNum.setAttribute('x', x + (width/2));
+                gridNum.setAttribute('y', y + (height/2));
+                gridNum.style.fontSize = textSize + "px";
+                gridNum.innerHTML = count;
+                ws.appendChild(gridNum);
+
                 count++;
             }
         }
