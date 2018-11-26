@@ -11,17 +11,48 @@
 </head>
 <body onload="loadInterface()">
 
-<select id="guiSelect"  onchange="guiUpdate()">
-    <option>Arrows</option>
-    <option>Drag</option>
-    <option>Target</option>
-    <option>Cardinal Speech</option>
-    <option>Trajectory Speech</option>
-    <option>Grid Speech</option>
-</select>
-
 
 <div class="wrapper">
+    <table>
+        <tr>
+            <td>
+
+                <select id="guiSelect"  onchange="guiUpdate()">
+                <option>Arrows</option>
+                <option>Drag</option>
+                <option>Fitts' Test</option>
+                <option>Target</option>
+                <option>Cardinal Speech</option>
+                <option>Trajectory Speech</option>
+                <option>Grid Speech</option>
+                 <option>Mouse Trajectory</option>
+                <option>WebMouse Control</option>
+                </select>
+            </td>
+            <td id="speechControls">
+                <button type="button">Click Me!</button>
+            </td>
+        </tr>
+        <tr>
+        <td id="trajectoryControls">
+
+            <label for="rA">Radius A</label>
+
+            <input id="rA" type="number" name="selRa" value="0" onchange="selRaVal()">
+        </td>
+            <td>
+
+            <label for="rB">Radius B</label>
+
+            <input id="rB" type="number" name="selRb" value="0" onchange="selRbVal()">
+
+            <input type="checkbox" name="trajectories" id="trajOpts" onchange="showtrajOpts()">Show Trajectory Options<br>
+
+        </td>
+    </tr>
+
+    </table>
+
     <div class="content">
         <svg class="workspace" id="workspace">
         </svg>
