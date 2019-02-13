@@ -65,6 +65,133 @@
 
 <!-- Scripts -->
 <script src="scripts/dat.gui.min.js"></script>
+<script>
+
+
+    var InterfaceTest = function() {
+        this.testtype='Arrows';
+        this.audioinput='';
+        this.videoinput='';
+        this.speech = false;
+        this.radiusA = 0.8;
+        this.radiusB= 0.8;
+        this.trajectory = false;
+
+        this.stopaudio = function() {
+        };
+
+        this.stopvideo = function() {
+            stopCam();
+        };
+    };
+
+    window.addEventListener( 'load', init );
+
+    var element = new InterfaceTest();
+    var gui = new dat.GUI();
+    gui.domElement.id = 'gui';
+    var audioInputs = ['a1'];
+    var videoInputs = ['v1'];
+    var AudioInputSelect= gui.add(element, 'audioinput',audioInputs);
+    var VideoInputSelect= gui.add(element, 'videoinput',videoInputs);
+
+    function init() {
+        var testControl = gui.add(element, 'testtype',{Arrows: 0, Drag: 1, Fitts: 2, Target: 3, CardinalSpeech: 4, TrajectorySpeech: 5,GridSpeech:6,VirtualTrackpad:7,
+            MouseTrajs:8, Tensorflow:9, Keyboard: 10} );
+
+        AudioInputSelect.domElement.id = 'audioSource';
+        VideoInputSelect.domElement.id = 'videoSource';
+
+        gui.add(element, 'stopaudio').name("Mute Audio");
+        gui.add(element, 'stopvideo').name("Stop Video");
+        var speechFolder = gui.addFolder('Speech Controls');
+        var speechControl =speechFolder.add(element, 'speech' );
+
+        var trajFolder = gui.addFolder('Trajectory Controls');
+        var trajRadiusAControl = trajFolder.add(element,  'radiusA', -5, 5);
+        var trajRadiusBControl = trajFolder.add(element,  'radiusB', -5, 5);
+        var trajDisplayOptions =trajFolder.add(element, 'trajectory' );
+        gui.open();
+
+        navigator.mediaDevices.enumerateDevices()
+            .then(gotDevices);
+        testControl.onFinishChange(function(value) {
+            clearWorkspace();
+            createEE(value); /* Please create the following code */
+
+            if (value<4){
+                // hidden
+                speechFolder.domElement.setAttribute("hidden", true);
+            } else{
+                // visible
+                speechFolder.domElement.removeAttribute("hidden");
+            }
+
+            if(value == 7){
+                // visible
+                trajFolder.domElement.removeAttribute("hidden");
+            }else {
+                // hidden
+                trajFolder.domElement.setAttribute("hidden", true);
+            }
+        })
+
+        trajRadiusAControl.onFinishChange(function(value) {
+            selRaVal();
+        })
+
+        trajRadiusBControl.onFinishChange(function(value) {
+            selRbVal();
+        })
+
+        trajDisplayOptions.onFinishChange(function(value) {
+            showtrajOpts();
+        })
+
+        VideoInputSelect.onFinishChange(function(value) {
+            changeCam(value);
+            //alert(this.__select.selectedOptions[0].text);
+        })
+
+    }
+
+    function gotDevices(deviceInfos) {
+        var audioInnerHTMLStr = "";
+        var videoInnerHTMLStr = "";
+
+        for (var i = 0; i !== deviceInfos.length; ++i) {
+            var deviceInfo = deviceInfos[i];
+            var labelA = "";
+            var labelV = "";
+
+            if (deviceInfo.kind === 'audioinput') {
+                labelA = deviceInfo.label ||
+                    'microphone ' + (audioSelect.length + 1);
+
+                var str = "<option value='" + deviceInfo.deviceId    + "'>" + labelA + "</option>";
+                audioInnerHTMLStr += str;
+            } else if (deviceInfo.kind === 'videoinput') {
+                labelV = deviceInfo.label || 'camera ' +
+                    (videoSelect.length + 1);
+
+                var str = "<option value='" + deviceInfo.deviceId    + "'>" + labelV + "</option>";
+                videoInnerHTMLStr += str;
+            } else {
+                console.log('Found one other kind of source/device: ', deviceInfo);
+            }
+        }
+
+        if (audioInnerHTMLStr != ""){
+            AudioInputSelect.domElement.children[0].innerHTML = audioInnerHTMLStr;
+        }
+
+        if (videoInnerHTMLStr!= ""){
+            VideoInputSelect.domElement.children[0].innerHTML= videoInnerHTMLStr;
+        }
+
+    }
+
+</script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="scripts/annyang.min.js"></script>
 
