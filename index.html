@@ -13,45 +13,6 @@
 
 
 <div class="wrapper">
-    <table>
-        <tr>
-            <td>
-                <select id="guiSelect"  onchange="guiUpdate()">
-                <option>Arrows</option>
-                <option>Drag</option>
-                <option>Fitts' Test</option>
-                    <option>Fitts' Test with Rotation</option>
-                <option>Target</option>
-                <option>Cardinal Speech</option>
-                <option>Trajectory Speech</option>
-                <option>Grid Speech</option>
-                 <option>Mouse Trajectory</option>
-                <option>WebMouse Control</option>
-                </select>
-            </td>
-            <td id="speechControls">
-                <button type="button">Click Me!</button>
-            </td>
-        </tr>
-        <tr>
-        <td id="trajectoryControls">
-
-            <label for="rA">Radius A</label>
-
-            <input id="rA" type="number" name="selRa" value="0" onchange="selRaVal()">
-        </td>
-            <td>
-
-            <label for="rB">Radius B</label>
-
-            <input id="rB" type="number" name="selRb" value="0" onchange="selRbVal()">
-
-            <input type="checkbox" name="trajectories" id="trajOpts" onchange="showtrajOpts()">Show Trajectory Options<br>
-
-        </td>
-    </tr>
-
-    </table>
 
     <div class="content">
         <svg class="workspace" id="workspace">
@@ -59,8 +20,6 @@
     </div>
 </div>
 
-
-<input type="range" min="3" max="50" value="50" id="myRange">
 
 
 <!-- Scripts -->
@@ -96,8 +55,11 @@
     var VideoInputSelect= gui.add(element, 'videoinput',videoInputs);
 
     function init() {
-        var testControl = gui.add(element, 'testtype',{Arrows: 0, Drag: 1, Fitts: 2, Target: 3, CardinalSpeech: 4, TrajectorySpeech: 5,GridSpeech:6,VirtualTrackpad:7,
-            MouseTrajs:8, Tensorflow:9, Keyboard: 10} );
+        var testControl =gui.add(element, 'testtype',
+            {Arrows: 0, Drag: 1, Fitts: 2, FittsTriangleAngle: 3, Target: 4, CardinalSpeech: 5,
+                TrajectorySpeech: 6,GridSpeech:7,VirtualTrackpad:8,
+                MouseTrajs:9, TensorflowClassify:10, TensorflowRegNN:10,  Keyboard: 12} );
+
 
         AudioInputSelect.domElement.id = 'audioSource';
         VideoInputSelect.domElement.id = 'videoSource';
@@ -117,7 +79,7 @@
             .then(gotDevices);
         testControl.onFinishChange(function(value) {
             clearWorkspace();
-            createEE(value); /* Please create the following code */
+            createEE(value);
 
             if (value<4){
                 // hidden
