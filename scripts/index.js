@@ -9,5 +9,6 @@ function loadInterface() {
 
 function guiUpdate() {
     clearWorkspace();
-    createEE();
+    control = document.getElementById("guiSelect").selectedIndex;
+    createEE(); /* Please create the following code */
 }
