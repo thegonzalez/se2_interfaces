@@ -6,7 +6,7 @@
 
 var isOneTouch = false;
 var control = 1;
-var controlTypes = ["arrows", "drag", "target"];
+var controlTypes = ["arrows", "drag", "target", "arrowsClick"];
 
 
 var ee = null;
@@ -27,7 +27,7 @@ var rot = null;
 // Target Params
 var targetPos = null;
 var targetRot = null;
-var targetRed = "#933";
+var targetRed = "#930";
 var targetGreen = "#393";
 var threshold = 3;
 
@@ -127,6 +127,21 @@ function createEE() {
             arrowDown.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
         }
     }
+    else if (controlTypes[control] === "arrowsClick") {
+        createSixArrows();
+/*        if (isOneTouch) {
+            arrowRight.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
+            arrowLeft.setAttribute("onclick", "startDrag(evt, HORIZONTAL)");
+            arrowUp.setAttribute("onclick", "startDrag(evt, VERTICAL)");
+            arrowDown.setAttribute("onclick", "startDrag(evt, VERTICAL)");
+        }
+        else {
+            arrowRight.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
+            arrowLeft.setAttribute("onmousedown", "startDrag(evt, HORIZONTAL)");
+            arrowUp.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
+            arrowDown.setAttribute("onmousedown", "startDrag(evt, VERTICAL)");
+        }*/
+    }
     else if (controlTypes[control] === "target") {
         createGhost();
         if(isOneTouch) {
@@ -136,6 +151,7 @@ function createEE() {
             ws.setAttribute("onmousedown", "startGhost(evt)");
         }
     }
+
     else {
         console.error("Please select a valid control");
     }
@@ -269,9 +285,50 @@ function createArrows() {
     // The transform attribute gets set in resetPose()
 }
 
+function createSixArrows() {
+    var ws = document.getElementById("workspace");
+
+    arrowRight = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowLeft = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowUp = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowDown = document.createElementNS('http://www.w3.org/2000/svg','path');
+
+    arrowsMove = [arrowRight, arrowLeft, arrowUp, arrowDown];
+
+    arrowsMove.forEach(function(arrow) {
+        arrow.setAttribute("d", "M0,"+(0)+" h"+arrowShaftLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight +
+            (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+
+            (lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowShaftLength)+"z");
+    });
+
+    arrowRight.style.fill = "#a442f4";
+    arrowLeft.style.fill = "#a442f4";
+    arrowUp.style.fill = "#36bc3d";
+    arrowDown.style.fill = "#36bc3d";
+
+    arrowsMove.forEach(function(arrow) {
+        ws.appendChild(arrow);
+    });
+
+    arrowRightXOffset = innerR + ringWidth;
+    arrowRightYOffset = - arrowWidth / 2;
+    arrowLeftXOffset = - (innerR + ringWidth);
+    arrowLeftYOffset =  arrowWidth / 2;
+    arrowUpXOffset = - arrowWidth / 2;
+    arrowUpYOffset =  - (innerR + ringWidth);
+    arrowDownXOffset = arrowWidth / 2;
+    arrowDownYOffset = (innerR + ringWidth);
+
+    // The transform attribute gets set in resetPose()
+}
+
 
 function startGhost(evt) {
     var ws = document.getElementById("workspace");
+    ghost.setAttribute("x1",0);
+    ghost.setAttribute("x2",0);
+    ghost.setAttribute("y1",0);
+    ghost.setAttribute("y2",0);
     targetFixedX = evt.offsetX;
     targetFixedY = evt.offsetY;
     ws.setAttribute("onmousemove", "drawGhost(evt)");
