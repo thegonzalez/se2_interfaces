@@ -5,7 +5,7 @@
  */
 
 var isOneTouch = false;
-var control = 1;
+var control = 3;
 var controlTypes = ["arrows", "drag", "target", "arrowsClick"];
 
 
@@ -48,6 +48,15 @@ var arrowUpXOffset;
 var arrowUpYOffset;
 var arrowDownXOffset;
 var arrowDownYOffset;
+
+// Additional variables used by arrowClick and arrowOver
+var arrowCW;
+var arrowCCW;
+var arrowCWXOffset;
+var arrowCWYOffset;
+var arrowCCWXOffset;
+var arrowCCWYOffset;
+var arrowsSix;
 
 // Constant variables for the arrows
 const HORIZONTAL = 0;
@@ -292,10 +301,12 @@ function createSixArrows() {
     arrowLeft = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowUp = document.createElementNS('http://www.w3.org/2000/svg','path');
     arrowDown = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowCW = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arrowCCW = document.createElementNS('http://www.w3.org/2000/svg','path');
 
-    arrowsMove = [arrowRight, arrowLeft, arrowUp, arrowDown];
+    arrowsSix = [arrowRight, arrowLeft, arrowUp, arrowDown, arrowCW, arrowCCW];
 
-    arrowsMove.forEach(function(arrow) {
+    arrowsSix.forEach(function(arrow) {
         arrow.setAttribute("d", "M0,"+(0)+" h"+arrowShaftLength+"v"+(-lipHeight)+"l"+arrowheadLength+","+(lipHeight +
             (arrowWidth /2)) +"l"+ (-arrowheadLength)+","+
             (lipHeight + (arrowWidth /2)) +"v"+(-lipHeight)+"h"+(-arrowShaftLength)+"z");
@@ -305,10 +316,8 @@ function createSixArrows() {
     arrowLeft.style.fill = "#a442f4";
     arrowUp.style.fill = "#36bc3d";
     arrowDown.style.fill = "#36bc3d";
-
-    arrowsMove.forEach(function(arrow) {
-        ws.appendChild(arrow);
-    });
+    arrowCW.style.fill = "#181acc";
+    arrowCCW.style.fill = "#cc070e";
 
     arrowRightXOffset = innerR + ringWidth;
     arrowRightYOffset = - arrowWidth / 2;
@@ -318,6 +327,14 @@ function createSixArrows() {
     arrowUpYOffset =  - (innerR + ringWidth);
     arrowDownXOffset = arrowWidth / 2;
     arrowDownYOffset = (innerR + ringWidth);
+    arrowCWXOffset = Math.round((innerR + ringWidth - arrowWidth / 2)*0.707);
+    arrowCWYOffset = - Math.round((innerR + ringWidth + arrowWidth / 2)*0.707);
+    arrowCCWXOffset = - Math.round((innerR + ringWidth + arrowWidth / 2)*0.707);
+    arrowCCWYOffset = - Math.round((innerR + ringWidth - arrowWidth / 2)*0.707);
+
+    arrowsSix.forEach(function(arrow) {
+        ws.appendChild(arrow);
+    });
 
     // The transform attribute gets set in resetPose()
 }
@@ -409,7 +426,15 @@ function resetPose() {
         moveObjectAndScale(arrowUp, pos[0] + arrowUpXOffset, pos[1] + arrowUpYOffset, -90, scale);
         moveObjectAndScale(arrowDown, pos[0] + arrowDownXOffset, pos[1] + arrowDownYOffset, 90, scale);
     }
+    if(arrowsSix){
+      moveObjectAndScale(arrowRight, pos[0] + arrowRightXOffset, pos[1] + arrowRightYOffset, 0, scale);
+      moveObjectAndScale(arrowLeft, pos[0] + arrowLeftXOffset, pos[1] + arrowLeftYOffset, 180, scale);
+      moveObjectAndScale(arrowUp, pos[0] + arrowUpXOffset, pos[1] + arrowUpYOffset, -90, scale);
+      moveObjectAndScale(arrowDown, pos[0] + arrowDownXOffset, pos[1] + arrowDownYOffset, 90, scale);
+      moveObjectAndScale(arrowCW, pos[0] + arrowCWXOffset, pos[1] + arrowCWYOffset, -45, scale);
+      moveObjectAndScale(arrowCCW, pos[0] + arrowCCWXOffset, pos[1] + arrowCCWYOffset, -135, scale);
 
+    }
     if(trajArrows){
         trajArrows.forEach(function (arrow) {
             moveObject(arrow, pos[0], pos[1], 0);
